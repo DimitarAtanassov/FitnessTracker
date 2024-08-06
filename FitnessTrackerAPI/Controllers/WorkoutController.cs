@@ -7,23 +7,25 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FitnessTrackerAPI.Data;
 using FitnessTrackerAPI.Model;
+using FitnessTrackerAPI.DTOs;
+using AutoMapper;
 
 namespace FitnessTrackerAPI.Controllers
 {
-    public class WorkoutController (DataContext context) : BaseApiController
+    public class WorkoutController (DataContext context, IMapper mapper) : BaseApiController
     {
         // GET: api/Workout
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Workout>>> GetWorkouts()
         {
-            return await context.Workouts.ToListAsync();
+            return await context.Workouts.Include(w => w.Exercises).ToListAsync();
         }
 
         // GET: api/Workout/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Workout>> GetWorkout(int id)
         {
-            var workout = await context.Workouts.FindAsync(id);
+            var workout = await context.Workouts.Include(w => w.Exercises).FirstOrDefaultAsync(w => w.Id == id);
 
             if (workout == null)
             {
@@ -63,7 +65,27 @@ namespace FitnessTrackerAPI.Controllers
 
             return NoContent();
         }
+        [HttpPut("add-exercise")]
+        public async Task<IActionResult> AddExerice(ExerciseDto exerciseDto)
+        {
+            var workout = await context.Workouts.Include(w => w.Exercises).FirstOrDefaultAsync(w => w.Id == exerciseDto.WorkoutId);
 
+            if (workout == null)
+            {
+                return NotFound();
+            }
+            var exercise = mapper.Map<Exercise>(exerciseDto);
+            workout.Exercises.Add(exercise);
+
+            if (await context.SaveChangesAsync() > 0)
+            {
+                return NoContent();
+            }
+
+            return BadRequest("Problem adding exercise");
+
+
+        }
         // POST: api/Workout
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]

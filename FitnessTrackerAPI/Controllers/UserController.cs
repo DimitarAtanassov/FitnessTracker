@@ -8,33 +8,42 @@ using Microsoft.EntityFrameworkCore;
 using FitnessTrackerAPI.Data;
 using FitnessTrackerAPI.Model;
 using Microsoft.AspNetCore.Authorization;
+using FitnessTrackerAPI.DTOs;
+using System.Security.Claims;
+using AutoMapper;
 
 namespace FitnessTrackerAPI.Controllers
 {
     [Authorize]
-    public class UserController (DataContext context) : BaseApiController
+    public class UserController(DataContext context, IMapper mapper) : BaseApiController
     {
 
         // GET: api/User
         [AllowAnonymous]
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<AppUser>>> GetUsers()
+        public async Task<ActionResult<IEnumerable<MemberDto>>> GetUsers()
         {
-            return await context.Users.ToListAsync();
+            var users = await context.Users.ToListAsync();
+
+            var usersToReturn = mapper.Map<IEnumerable<MemberDto>>(users);
+
+            return Ok(usersToReturn);
         }
 
         // GET: api/User/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<AppUser>> GetUser(int id)
+        public async Task<ActionResult<MemberDto>> GetUser(int id)
         {
-            var appUser = await context.Users.FindAsync(id);
+            var appUser = await context.Users
+                .Include(u => u.Workouts)
+                .FirstOrDefaultAsync(u => u.Id == id);
 
             if (appUser == null)
             {
                 return NotFound();
             }
 
-            return appUser;
+            return mapper.Map<MemberDto>(appUser);
         }
 
         // PUT: api/User/5
@@ -67,9 +76,7 @@ namespace FitnessTrackerAPI.Controllers
 
             return NoContent();
         }
-
         // POST: api/User
-
         [HttpPost]
         public async Task<ActionResult<AppUser>> CreateUser(AppUser appUser)
         {
@@ -77,6 +84,37 @@ namespace FitnessTrackerAPI.Controllers
             await context.SaveChangesAsync();
 
             return CreatedAtAction("GetUser", new { id = appUser.Id }, appUser);
+        }
+
+        [HttpPost("add-workout")]
+        public async Task<ActionResult<WorkoutDto>> AddWorkout(WorkoutDto workoutDto)
+        {
+            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
+            if(username == null) return BadRequest("No username found in token");
+            
+            var user = await context.Users.Include(u => u.Workouts).FirstOrDefaultAsync(x => x.UserName == username);
+
+            if (user == null) return BadRequest("Could not find user");
+
+            var workout = new Workout
+            {
+                Id = workoutDto.Id,
+                WorkoutName = workoutDto.WorkoutName,
+                Duration = workoutDto.Duration,
+                Date = workoutDto.Date,
+                UserId = user.Id
+            };
+
+            user.Workouts.Add(workout);
+
+            if (await context.SaveChangesAsync() > 0)
+            {
+                var workoutToReturn = mapper.Map<WorkoutDto>(workout);
+                return CreatedAtAction("GetUser", new { id = user.Id }, workoutToReturn);
+            }
+
+            return BadRequest("Problem adding workout");
         }
 
         // DELETE: api/User/5

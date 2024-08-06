@@ -15,7 +15,9 @@ namespace FitnessTrackerAPI.Controllers
         public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
         {
             // Check if username is unique so there are no duplicate usernames in db.
-            if (await UserExists(registerDto.Username)) return BadRequest("Username is taken");
+            if (await UsernameExists(registerDto.Username)) return BadRequest("Username is taken");
+            if (await UserEmailExists(registerDto.Email)) return BadRequest("Email is taken");
+
             
             using var hmac = new HMACSHA512();
             
@@ -71,9 +73,14 @@ namespace FitnessTrackerAPI.Controllers
         ///
         /// Helper Function To check if username already exists in DB
         ///
-        private async Task<bool> UserExists(string username)
+        private async Task<bool> UsernameExists(string username)
         {
             return await context.Users.AnyAsync(x=> x.UserName.ToLower() == username.ToLower());
+        }
+
+        private async Task<bool> UserEmailExists(string email)
+        {
+            return await context.Users.AnyAsync(x => x.Email.ToLower() == email.ToLower());
         }
 
     }

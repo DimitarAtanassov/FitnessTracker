@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using FitnessTrackerAPI.DTOs;
+using System.ComponentModel.DataAnnotations;
 
 namespace FitnessTrackerAPI.Model
 {
@@ -9,5 +10,6 @@ namespace FitnessTrackerAPI.Model
         public required byte[] PasswordHash { get; set; }
         public required byte[] PasswordSalt { get; set; }
         public required string Email { get; set; }
+        public ICollection<Workout> Workouts { get; set; } = new List<Workout>();
     }
 }

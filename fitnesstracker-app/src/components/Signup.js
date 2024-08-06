@@ -1,43 +1,38 @@
 // Manages the signup form and authentication
 import React, {useState} from "react";
 import axios from 'axios';
+import { useNavigate } from "react-router-dom";
 
 const Signup = () => 
 {
+    const navigate = useNavigate();
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
-    const handleSignup = (e) => 
+    
+    const handleSignup = async (e) => 
     {
         e.preventDefault();
-        console.log("Username:", username, "Email:", email, "Password:", password, "Confirm:", password);
+        console.log("Input", "Username:", username, "Email:", email, "Password:", password, "Confirm:", password);
         
         // Make Post Request
-        axios.post('http://localhost:5162/api/User', 
-        {
+        const res = await axios.post('http://localhost:5162/api/account/register', {
             "username": username,
-            "passwordHash": "123",
-            "passwordSalt": "123",
+            "password": password,
             "email": email,
-            "age": 1,
-            "weight": 1
         })
-        .then(function (response) 
-        {
-            console.log(response);
+        .then((response) => {
+            localStorage.setItem('token', response.data.token);
+            localStorage.setItem('username', response.data.username);
+            navigate("/home");
+
         })
-        .catch(function (error)
-        {
-            console.log(error);
-        });
-        
+        .catch(err => console.log(err));     
         /*
             TODO: Implement Additional Logic if needed 
-        */
-
-       
+        */       
     };
 
     return (

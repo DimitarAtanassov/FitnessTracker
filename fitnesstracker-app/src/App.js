@@ -5,6 +5,7 @@ import Signup from './components/Signup';
 import Home from "./components/Home";
 import LoginSignup from "./components/LoginSignup";
 import Workout from "./components/Workout";
+import WorkoutDetails from "./components/WorkoutDetails";
 function App() 
 {
   return (
@@ -26,6 +27,9 @@ function App()
           </Route>
 
           <Route path="/workout" element={<Workout />}>
+          </Route>
+
+          <Route path="/workout-details" element={<WorkoutDetails />}>
           </Route>
 
         </Routes>

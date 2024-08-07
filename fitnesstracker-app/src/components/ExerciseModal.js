@@ -2,6 +2,7 @@ import React from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import axios from "axios";
+
 const ExerciseModal = ({
     show,
     handleClose,
@@ -15,29 +16,57 @@ const ExerciseModal = ({
     reps,
     setReps,
     weight,
-    setWeight
+    setWeight,
+    isEditing,
+    workoutId,
+    exerciseId
 }) => {
-
     const handleSave = async () => {
-        const workoutId = localStorage.getItem("currentWorkoutId");
         const newExercise = {
             exerciseName,
             muscleGroupName,
             sets,
             reps,
             weight,
-            workoutId
+            ...(isEditing && { id: exerciseId }) // Add the exercise ID if editing
         };
 
-        const res = await axios.put('http://localhost:5162/api/workout/add-exercise',newExercise)
-
-        handleSaveExercise(newExercise);
+        try {
+            if (isEditing && exerciseId) {
+                await axios.put(
+                    `http://localhost:5162/api/exercise/${exerciseId}`,
+                    newExercise,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        }
+                    }
+                );
+                console.log("Exercise updated successfully!");
+                handleSaveExercise(newExercise, exerciseId);
+            } else {
+                const response = await axios.post(
+                    `http://localhost:5162/api/exercise/add-exercise/${workoutId}`,
+                    newExercise,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        }
+                    }
+                );
+                console.log("Exercise added successfully!");
+                const createdExercise = response.data;
+                handleSaveExercise(createdExercise, createdExercise.id); // Pass the entire created exercise and its ID
+            }
+        } catch (error) {
+            console.error("There was an error saving the exercise!", error);
+        }
     };
 
     return (
         <Modal show={show} onHide={handleClose}>
             <Modal.Header closeButton>
-                <Modal.Title>Add Exercise</Modal.Title>
+                <Modal.Title>{isEditing ? "Edit Exercise" : "Add Exercise"}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <Form>
@@ -88,7 +117,7 @@ const ExerciseModal = ({
                     Close
                 </Button>
                 <Button variant="primary" onClick={handleSave}>
-                    Save Exercise
+                    {isEditing ? "Update Exercise" : "Save Exercise"}
                 </Button>
             </Modal.Footer>
         </Modal>

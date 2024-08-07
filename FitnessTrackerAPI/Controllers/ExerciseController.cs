@@ -1,12 +1,14 @@
 ﻿using FitnessTrackerAPI.Data;
 using FitnessTrackerAPI.DTOs;
 using FitnessTrackerAPI.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace FitnessTrackerAPI.Controllers
 {
+    [Authorize]
     public class ExerciseController(DataContext context) : BaseApiController
     {
         [HttpGet]
@@ -32,12 +34,16 @@ namespace FitnessTrackerAPI.Controllers
 
         // PUT: api/Exercise/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateExercise(int id, Exercise exercise)
+        public async Task<IActionResult> UpdateExercise(int id, ExerciseDto exerciseDto)
         {
-            if (id != exercise.Id)
-            {
-                return BadRequest();
-            }
+            var exercise = await context.Exercises.FindAsync(exerciseDto.Id);
+            if (exercise == null) return NotFound();
+
+            exercise.ExerciseName = exerciseDto.ExerciseName;
+            exercise.MuscleGroupName = exerciseDto.MuscleGroupName;
+            exercise.Sets = exerciseDto.Sets;
+            exercise.Reps = exerciseDto.Reps;
+            exercise.Weight = exerciseDto.Weight;
 
             context.Entry(exercise).State = EntityState.Modified;
 
@@ -67,6 +73,30 @@ namespace FitnessTrackerAPI.Controllers
             await context.SaveChangesAsync();
 
             return CreatedAtAction("GetExercise", new { id = exercise.Id }, exercise);
+        }
+        [HttpPost("add-exercise/{workoutId}")]
+        public async Task<ActionResult<ExerciseDto>> AddExercise(int workoutId, ExerciseDto exerciseDto)
+        {
+            var workout = await context.Workouts.SingleOrDefaultAsync(w => w.Id == workoutId);
+            if (workout == null) return NotFound();
+
+            var exerciseToAdd = new Exercise
+            {
+                ExerciseName = exerciseDto.ExerciseName,
+                MuscleGroupName = exerciseDto.MuscleGroupName,
+                Sets = exerciseDto.Sets,
+                Reps = exerciseDto.Reps,
+                Weight = exerciseDto.Weight,
+                WorkoutId = workoutId,
+            };
+            workout.Exercises.Add(exerciseToAdd);
+            
+            if (await context.SaveChangesAsync() > 0)
+            {
+                return Ok(exerciseToAdd);
+            }
+            
+            return BadRequest();
         }
 
         // DELETE: api/Exercise/5

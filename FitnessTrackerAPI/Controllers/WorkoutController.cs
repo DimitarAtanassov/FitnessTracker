@@ -9,9 +9,11 @@ using FitnessTrackerAPI.Data;
 using FitnessTrackerAPI.Model;
 using FitnessTrackerAPI.DTOs;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FitnessTrackerAPI.Controllers
 {
+    [Authorize]
     public class WorkoutController (DataContext context, IMapper mapper) : BaseApiController
     {
         // GET: api/Workout
@@ -65,37 +67,39 @@ namespace FitnessTrackerAPI.Controllers
 
             return NoContent();
         }
-        [HttpPut("add-exercise")]
-        public async Task<IActionResult> AddExerice(ExerciseDto exerciseDto)
-        {
-            var workout = await context.Workouts.Include(w => w.Exercises).FirstOrDefaultAsync(w => w.Id == exerciseDto.WorkoutId);
 
-            if (workout == null)
-            {
-                return NotFound();
-            }
+        
+        //[HttpPut("add-exercise")]
+        //public async Task<IActionResult> AddExerice(ExerciseDto exerciseDto)
+        //{
+        //    var workout = await context.Workouts.Include(w => w.Exercises).FirstOrDefaultAsync(w => w.Id == exerciseDto.WorkoutId);
 
-            var exercise = new Exercise
-            {
-                ExerciseName = exerciseDto.ExerciseName,
-                MuscleGroupName = exerciseDto.MuscleGroupName,
-                Sets = exerciseDto.Sets,
-                Reps = exerciseDto.Reps,
-                Weight = exerciseDto.Weight,
-                WorkoutId = workout.Id,
-            };
+        //    if (workout == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            workout.Exercises.Add(exercise);
+        //    var exercise = new Exercise
+        //    {
+        //        ExerciseName = exerciseDto.ExerciseName,
+        //        MuscleGroupName = exerciseDto.MuscleGroupName,
+        //        Sets = exerciseDto.Sets,
+        //        Reps = exerciseDto.Reps,
+        //        Weight = exerciseDto.Weight,
+        //        WorkoutId = workout.Id,
+        //    };
 
-            if (await context.SaveChangesAsync() > 0)
-            {
-                return NoContent();
-            }
+        //    workout.Exercises.Add(exercise);
 
-            return BadRequest("Problem adding exercise");
+        //    if (await context.SaveChangesAsync() > 0)
+        //    {
+        //        return NoContent();
+        //    }
+
+        //    return BadRequest("Problem adding exercise");
+        //}
 
 
-        }
         // POST: api/Workout
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]

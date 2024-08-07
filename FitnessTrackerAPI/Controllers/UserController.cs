@@ -19,7 +19,6 @@ namespace FitnessTrackerAPI.Controllers
     {
 
         // GET: api/User
-        [AllowAnonymous]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<MemberDto>>> GetUsers()
         {
@@ -104,7 +103,6 @@ namespace FitnessTrackerAPI.Controllers
             var workout = new Workout
             {
                 WorkoutName = workoutDto.WorkoutName,
-                Duration = workoutDto.Duration,
                 Date = workoutDto.Date,
                 UserId = user.Id
             };
@@ -147,6 +145,7 @@ namespace FitnessTrackerAPI.Controllers
             {
                 var appUser = await context.Users
                     .Include(u => u.Workouts)
+                    .ThenInclude(w => w.Exercises)
                     .FirstOrDefaultAsync(u => u.Id == userId);
                 if (appUser == null) return NotFound();
 

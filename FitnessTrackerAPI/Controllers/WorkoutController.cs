@@ -74,7 +74,17 @@ namespace FitnessTrackerAPI.Controllers
             {
                 return NotFound();
             }
-            var exercise = mapper.Map<Exercise>(exerciseDto);
+
+            var exercise = new Exercise
+            {
+                ExerciseName = exerciseDto.ExerciseName,
+                MuscleGroupName = exerciseDto.MuscleGroupName,
+                Sets = exerciseDto.Sets,
+                Reps = exerciseDto.Reps,
+                Weight = exerciseDto.Weight,
+                WorkoutId = workout.Id,
+            };
+
             workout.Exercises.Add(exercise);
 
             if (await context.SaveChangesAsync() > 0)

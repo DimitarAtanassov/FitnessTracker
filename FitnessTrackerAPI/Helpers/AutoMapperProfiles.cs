@@ -9,8 +9,15 @@ namespace FitnessTrackerAPI.Helpers
     {
         public AutoMapperProfiles() 
         {
-            CreateMap<AppUser, MemberDto>();
-            CreateMap<Workout, WorkoutDto>();
+            CreateMap<AppUser, MemberDto>()
+                .ForMember(dest => dest.Workouts, opt => opt.MapFrom(src => src.Workouts));
+
+            CreateMap<Workout, WorkoutDto>()
+                .ForMember(dest => dest.Exercises, opt => opt.MapFrom(src => src.Exercises));
+
+            CreateMap<Exercise, ExerciseDto>();
+
+            CreateMap<WorkoutDto, Workout>();
             CreateMap<ExerciseDto, Exercise>();
         }
     }

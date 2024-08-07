@@ -1,17 +1,28 @@
 // Manages the login form and authentication
 
 import React, {useState} from "react";
-
+import axios from 'axios';
+import { useNavigate } from "react-router-dom";
 
 const Login = () => 
     {
+        const navigate = useNavigate();
         const [username, setUsername] = useState("");
         const [password, setPassword] = useState("");
     
-        const handleLogin = (e) => 
+        const handleLogin = async (e) => 
         {
             e.preventDefault();
-            
+            const res = await axios.post('http://localhost:5162/api/account/login', {
+                "username": username,
+                "password": password,
+            })
+            .then((response) => {
+                localStorage.setItem('token', response.data.token);
+                navigate("/home");
+    
+            })
+            .catch(err => console.log(err));
             /*
                 TODO: Implement Login Authentication Logic
             */

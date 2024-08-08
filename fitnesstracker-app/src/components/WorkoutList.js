@@ -13,11 +13,19 @@ const WorkoutList = ({ workouts }) => {
         <div>
             <h2>Your Workouts</h2>
             <ListGroup>
-                {workouts.map((workout) => (
-                    <ListGroup.Item key={workout.id} action onClick={() => handleWorkoutClick(workout)}>
-                        {workout.workoutName} - {workout.date}
-                    </ListGroup.Item>
-                ))}
+                {workouts && workouts.length > 0 ? (
+                    workouts.map((workout) => (
+                        <ListGroup.Item 
+                            key={workout.id} 
+                            action 
+                            onClick={() => handleWorkoutClick(workout)}
+                        >
+                            {workout.workoutName} - {new Date(workout.date).toLocaleDateString()}
+                        </ListGroup.Item>
+                    ))
+                ) : (
+                    <p>No workouts available.</p>
+                )}
             </ListGroup>
         </div>
     );

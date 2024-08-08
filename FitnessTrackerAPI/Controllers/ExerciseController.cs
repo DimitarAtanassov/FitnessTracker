@@ -1,5 +1,6 @@
 ﻿using FitnessTrackerAPI.Data;
 using FitnessTrackerAPI.DTOs;
+using FitnessTrackerAPI.Interfaces;
 using FitnessTrackerAPI.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -9,19 +10,20 @@ using Microsoft.EntityFrameworkCore;
 namespace FitnessTrackerAPI.Controllers
 {
     [Authorize]
-    public class ExerciseController(DataContext context) : BaseApiController
+    public class ExerciseController(DataContext context, IExerciseService exerciseService) : BaseApiController
     {
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Exercise>>> GetExercises()
         {
-            return await context.Exercises.ToListAsync();
+            var exercises = await exerciseService.GetExercisesAsync();
+            return Ok(exercises);
         }
 
         // GET: api/Exercise/1
         [HttpGet("{id}")]
         public async Task<ActionResult<Exercise>> GetExercise(int id)
         {
-            var exercise = await context.Exercises.FindAsync(id);
+            var exercise = await exerciseService.GetExercisesAsync();
 
             if (exercise == null)
             {
@@ -36,7 +38,8 @@ namespace FitnessTrackerAPI.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateExercise(int id, ExerciseDto exerciseDto)
         {
-            var exercise = await context.Exercises.FindAsync(exerciseDto.Id);
+            var exercise = await exerciseService.GetExerciseByIdAsync(exerciseDto.Id);
+
             if (exercise == null) return NotFound();
 
             exercise.ExerciseName = exerciseDto.ExerciseName;
@@ -70,9 +73,14 @@ namespace FitnessTrackerAPI.Controllers
         public async Task<ActionResult<Exercise>> CreateExercise(Exercise exercise)
         {
             context.Exercises.Add(exercise);
-            await context.SaveChangesAsync();
+            
+            if(await exerciseService.SaveAllChangesAsync())
+            {
+                return CreatedAtAction("GetExercise", new { id = exercise.Id }, exercise);
+            }
 
-            return CreatedAtAction("GetExercise", new { id = exercise.Id }, exercise);
+            return BadRequest("Issue creating new Exercise");
+            
         }
         [HttpPost("add-exercise/{workoutId}")]
         public async Task<ActionResult<ExerciseDto>> AddExercise(int workoutId, ExerciseDto exerciseDto)

@@ -10,31 +10,35 @@ using FitnessTrackerAPI.Model;
 using FitnessTrackerAPI.DTOs;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using FitnessTrackerAPI.Interfaces;
 
 namespace FitnessTrackerAPI.Controllers
 {
     [Authorize]
-    public class WorkoutController (DataContext context, IMapper mapper) : BaseApiController
+    public class WorkoutController (IWorkoutService workoutService, DataContext context, IMapper mapper) : BaseApiController
     {
         // GET: api/Workout
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Workout>>> GetWorkouts()
         {
-            return await context.Workouts.Include(w => w.Exercises).ToListAsync();
+            var workouts = await workoutService.GetWorkoutsAsync();
+
+            return Ok(workouts);
+            
         }
 
         // GET: api/Workout/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Workout>> GetWorkout(int id)
         {
-            var workout = await context.Workouts.Include(w => w.Exercises).FirstOrDefaultAsync(w => w.Id == id);
+            var workout = await workoutService.GetWorkoutByIdAsync(id);
 
             if (workout == null)
             {
                 return NotFound();
             }
 
-            return workout;
+            return Ok(workout);
         }
 
         // PUT: api/Workout/5
@@ -68,54 +72,25 @@ namespace FitnessTrackerAPI.Controllers
             return NoContent();
         }
 
-        
-        //[HttpPut("add-exercise")]
-        //public async Task<IActionResult> AddExerice(ExerciseDto exerciseDto)
-        //{
-        //    var workout = await context.Workouts.Include(w => w.Exercises).FirstOrDefaultAsync(w => w.Id == exerciseDto.WorkoutId);
-
-        //    if (workout == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    var exercise = new Exercise
-        //    {
-        //        ExerciseName = exerciseDto.ExerciseName,
-        //        MuscleGroupName = exerciseDto.MuscleGroupName,
-        //        Sets = exerciseDto.Sets,
-        //        Reps = exerciseDto.Reps,
-        //        Weight = exerciseDto.Weight,
-        //        WorkoutId = workout.Id,
-        //    };
-
-        //    workout.Exercises.Add(exercise);
-
-        //    if (await context.SaveChangesAsync() > 0)
-        //    {
-        //        return NoContent();
-        //    }
-
-        //    return BadRequest("Problem adding exercise");
-        //}
-
-
         // POST: api/Workout
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Workout>> PostWorkout(Workout workout)
         {
             context.Workouts.Add(workout);
-            await context.SaveChangesAsync();
+            if(await workoutService.SaveAllAsync())
+            {
+                return CreatedAtAction("GetWorkout", new { id = workout.Id }, workout);
+            }
 
-            return CreatedAtAction("GetWorkout", new { id = workout.Id }, workout);
+            return BadRequest("No workout changes were found to save");
         }
 
         // DELETE: api/Workout/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteWorkout(int id)
         {
-            var workout = await context.Workouts.FindAsync(id);
+            var workout = await workoutService.GetWorkoutByIdAsync(id);
             if (workout == null)
             {
                 return NotFound();

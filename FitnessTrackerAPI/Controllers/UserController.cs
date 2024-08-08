@@ -12,6 +12,8 @@ using FitnessTrackerAPI.DTOs;
 using System.Security.Claims;
 using AutoMapper;
 using FitnessTrackerAPI.Interfaces;
+using FitnessTrackerAPI.Helpers;
+using AutoMapper.QueryableExtensions;
 
 namespace FitnessTrackerAPI.Controllers
 {
@@ -133,7 +135,7 @@ namespace FitnessTrackerAPI.Controllers
         }
 
         [HttpGet("get-workouts")]
-        public async Task<ActionResult<List<WorkoutDto>>> GetUserWorkouts()
+        public async Task<ActionResult<List<WorkoutDto>>> GetUserWorkouts([FromQuery] PaginationParams paginationParams)
         {
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             
@@ -146,7 +148,16 @@ namespace FitnessTrackerAPI.Controllers
                 
                 if (appUser == null) return NotFound();
 
-                return mapper.Map<List<WorkoutDto>>(appUser.Workouts);
+                //Pagination
+                var query = context.Workouts.AsQueryable();
+
+                // User's Workouts:
+                query = query.Where(w => w.UserId == userId);
+
+                // Pagination Response
+                var paginatedWorkouts = await PaginatedList<WorkoutDto>.CreateAsync(query.ProjectTo<WorkoutDto>(mapper.ConfigurationProvider), paginationParams.PageIndex, paginationParams.PageSize);
+
+                return Ok(paginatedWorkouts);
             }
             
             return BadRequest("Problem fetching user's workouts");

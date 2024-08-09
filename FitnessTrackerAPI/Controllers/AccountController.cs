@@ -2,6 +2,7 @@
 using FitnessTrackerAPI.DTOs;
 using FitnessTrackerAPI.Interfaces;
 using FitnessTrackerAPI.Model;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
@@ -9,7 +10,7 @@ using System.Text;
 
 namespace FitnessTrackerAPI.Controllers
 {
-    public class AccountController(DataContext context, ITokenService tokenService) : BaseApiController
+    public class AccountController(UserManager<AppUser> userManager, ITokenService tokenService) : BaseApiController
     {
         [HttpPost("register")] // api/account/register
         public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
@@ -17,29 +18,21 @@ namespace FitnessTrackerAPI.Controllers
             // Check if username is unique so there are no duplicate usernames in db.
             if (await UsernameExists(registerDto.Username)) return BadRequest("Username is taken");
             if (await UserEmailExists(registerDto.Email)) return BadRequest("Email is taken");
-
-            
-            using var hmac = new HMACSHA512();
             
             // Create AppUser with hashed password
             var user = new AppUser
             {
                 UserName = registerDto.Username.ToLower(),
-                PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.Password)),
-                PasswordSalt = hmac.Key,
                 Email = registerDto.Email,
             };
 
-            // Add new AppUser to DB
-            context.Users.Add(user);
+            var result = await userManager.CreateAsync(user, registerDto.Password);
 
-            // Save Changes to update the DB 
-            await context.SaveChangesAsync();
-
+            if(!result.Succeeded) return BadRequest(result.Errors);
             return new UserDto
             {
                 Username = user.UserName,
-                Token = tokenService.CreateToken(user)
+                Token = await tokenService.CreateToken(user)
             };
         }
 
@@ -47,25 +40,15 @@ namespace FitnessTrackerAPI.Controllers
         public async Task<ActionResult<UserDto>> Login(LoginDto loginDto)
         {
             // Check if username exists in db
-            var user = await context.Users.FirstOrDefaultAsync(x =>  x.UserName == loginDto.Username.ToLower());
+            var user = await userManager.Users.FirstOrDefaultAsync(x =>  x.NormalizedUserName == loginDto.Username.ToUpper());
 
-            if (user == null) return Unauthorized($"Username: {loginDto.Username} not found");
-
-            // Login Password Authentication
-            using var hmac = new HMACSHA512(user.PasswordSalt);
-
-            var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(loginDto.Password));
-
-            for (int i = 0; i < computedHash.Length; i++)
-            {
-                if (computedHash[i] != user.PasswordHash[i]) return Unauthorized("Invalid password");
-            }
+            if (user == null || user.UserName == null) return Unauthorized($"Username: {loginDto.Username} not found");
 
             // Return User to client on successful login
             return new UserDto
             {
                 Username = user.UserName,
-                Token = tokenService.CreateToken(user)
+                Token = await tokenService.CreateToken(user)
             };
 
         }
@@ -75,12 +58,12 @@ namespace FitnessTrackerAPI.Controllers
         ///
         private async Task<bool> UsernameExists(string username)
         {
-            return await context.Users.AnyAsync(x=> x.UserName.ToLower() == username.ToLower());
+            return await userManager.Users.AnyAsync(x=> x.NormalizedUserName == username.ToUpper());
         }
 
         private async Task<bool> UserEmailExists(string email)
         {
-            return await context.Users.AnyAsync(x => x.Email.ToLower() == email.ToLower());
+            return await userManager.Users.AnyAsync(x => x.NormalizedEmail == email.ToUpper());
         }
 
     }

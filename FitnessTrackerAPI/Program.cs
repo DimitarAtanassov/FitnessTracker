@@ -1,8 +1,10 @@
 using FitnessTrackerAPI.Data;
 using FitnessTrackerAPI.Interfaces;
 using FitnessTrackerAPI.Middleware;
+using FitnessTrackerAPI.Model;
 using FitnessTrackerAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -38,6 +40,15 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IWorkoutService, WorkoutService>();
 builder.Services.AddScoped<IExerciseService, ExerciseService>();
 
+builder.Services.AddIdentityCore<AppUser>(opt =>
+{
+    opt.Password.RequireNonAlphanumeric = false;
+    opt.User.RequireUniqueEmail = true;
+})
+    .AddRoles<AppRole>()
+    .AddRoleManager<RoleManager<AppRole>>()
+    .AddEntityFrameworkStores<DataContext>();
+
 // JWT Authentication Middleware Setup.
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -53,6 +64,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
 
     });
+
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"))
+    .AddPolicy("ModerateExerciseRole", policy => policy.RequireRole("Admin", "Moderator"));
 
 var app = builder.Build();
 app.UseMiddleware<GlobalExceptionHandler>();
@@ -71,5 +86,24 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+
+using var scope = app.Services.CreateScope(); // We create a scope (for dependancy injection inside of program class) and we want this scope to be disposed after we are finished with it so we add the using keyword
+var services = scope.ServiceProvider; // Used to reslove the required services for the operations within the scope above
+// Adding error handling here because we are inside of our program class which means we will not get the benfit of our Exception Middleware we created earlier.
+try
+{
+    var context = services.GetRequiredService<DataContext>();  //Getting the DataContexet service 
+    var userManager = services.GetRequiredService<UserManager<AppUser>>();
+    var roleManager = services.GetRequiredService<RoleManager<AppRole>>();
+    await context.Database.MigrateAsync();  // Applies migrations and creates database if it hasn't been created already
+    await Seed.SeedUsers(userManager, roleManager);
+}
+catch (Exception ex)
+{
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    logger.LogError(ex, "An error occurred during migration");
+}
+
 
 app.Run();

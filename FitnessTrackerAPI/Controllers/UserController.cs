@@ -14,6 +14,7 @@ using AutoMapper;
 using FitnessTrackerAPI.Interfaces;
 using FitnessTrackerAPI.Helpers;
 using AutoMapper.QueryableExtensions;
+using FitnessTrackerAPI.Extensions;
 
 namespace FitnessTrackerAPI.Controllers
 {
@@ -90,11 +91,7 @@ namespace FitnessTrackerAPI.Controllers
         [HttpPost("add-workout")]
         public async Task<ActionResult<WorkoutDto>> AddWorkout(WorkoutDto workoutDto)
         {
-            var username = User.FindFirst(ClaimTypes.Name)?.Value;
-            
-            if(username == null) return BadRequest("No username found in token");
-            
-            var user = await userSerivce.GetUserByUsernameAsync(username);
+            var user = await userSerivce.GetUserByUsernameAsync(User.GetUsername());
 
             if (user == null) return BadRequest("Could not find user");
 

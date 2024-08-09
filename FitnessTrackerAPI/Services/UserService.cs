@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FitnessTrackerAPI.Services
 {
-    public class UserService(DataContext context, IMapper mapper) : IUserService
+    public class UserService(DataContext context) : IUserService
     {
         public async Task<AppUser?> GetUserByIdAsync(int id)
         {

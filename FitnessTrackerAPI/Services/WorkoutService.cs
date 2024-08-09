@@ -1,13 +1,15 @@
 ﻿using AutoMapper;
 using FitnessTrackerAPI.Data;
+using FitnessTrackerAPI.DTOs;
 using FitnessTrackerAPI.Interfaces;
 using FitnessTrackerAPI.Model;
 using Microsoft.EntityFrameworkCore;
 
 namespace FitnessTrackerAPI.Services
 {
-    public class WorkoutService(DataContext context, IMapper mapper) : IWorkoutService
+    public class WorkoutService(DataContext context) : IWorkoutService
     {
+
         public async Task<Workout?> GetWorkoutByIdAsync(int id)
         {
             return await context.Workouts.Include(w => w.Exercises).FirstOrDefaultAsync(w => w.Id == id);

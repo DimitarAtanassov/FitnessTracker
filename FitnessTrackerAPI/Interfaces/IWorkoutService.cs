@@ -1,4 +1,5 @@
-﻿using FitnessTrackerAPI.Model;
+﻿using FitnessTrackerAPI.DTOs;
+using FitnessTrackerAPI.Model;
 
 namespace FitnessTrackerAPI.Interfaces
 {

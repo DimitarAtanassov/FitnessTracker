@@ -15,7 +15,7 @@ using FitnessTrackerAPI.Interfaces;
 namespace FitnessTrackerAPI.Controllers
 {
     [Authorize]
-    public class WorkoutController (IWorkoutService workoutService, DataContext context, IMapper mapper) : BaseApiController
+    public class WorkoutController (IWorkoutService workoutService, DataContext context) : BaseApiController
     {
         // GET: api/Workout
         [HttpGet]

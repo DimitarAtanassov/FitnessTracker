@@ -5,7 +5,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import axios from "axios";
 import MuscleGroupModal from './MuscleGroupModal';
 import WorkoutList from './WorkoutList';
-
+import WorkoutService from "../Services/workoutService";
 function Home() {
     const [show, setShow] = useState(false);
     const [muscleGroup, setMuscleGroup] = useState("");
@@ -17,22 +17,9 @@ function Home() {
 
     useEffect(() => {
         const fetchWorkouts = async (pageIndex) => {
-            const token = localStorage.getItem('token');
-            
             try {
-                const response = await axios.get('http://localhost:5162/api/user/get-workouts', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    },
-                    params: {
-                        PageIndex: pageIndex,
-                        PageSize: 10
-                    }
-                });
-    
-                // Assuming the response is an array
-                setWorkouts(response.data);
-                // No need to set currentPage or totalPages if the response is just an array
+                const fetchedWorkouts = await WorkoutService.fetchUserWorkouts(pageIndex);
+                setWorkouts(fetchedWorkouts);
             } catch (err) {
                 console.error("Error fetching workouts:", err);
             }
@@ -55,30 +42,24 @@ function Home() {
     }
 
     const handleStartWorkout = async () => {
-        const token = localStorage.getItem('token');
-    
-        const currentDate = new Date().toISOString();
-    
-        const res = await axios.post('http://localhost:5162/api/user/add-workout',
-            {
-                "WorkoutName": muscleGroup,
-                "Date": currentDate,
-            },
-            {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            }).then(response => {
-                localStorage.setItem("currentWorkoutId", response.data.id);
-                navigate("/workout", { state: { muscleGroup, workoutId: response.data.id } });
-            });
-    
-        setShow(false);
-    }
+        try {
+            const response = await WorkoutService.createWorkout(muscleGroup);
+            navigate("/workout", { state: { muscleGroup, workoutId: response.data.id } });
+            setShow(false);
+        } catch (error) {
+            console.error("Error starting workout:", error);
+        }
+    };
 
     return (
-        <div>
-            <Button onClick={startWorkoutClick}>Start Workout</Button>
+        <div className="container vh-100 d-flex flex-column justify-content-center align-items-center" style={{ backgroundColor: '#f4f4f4' }}>
+            <h2 style={{ fontWeight: 'bold', color: '#333', marginBottom: '30px' }}>
+                <i className="fas fa-dumbbell" style={{ marginRight: '10px' }}></i>
+                Workout Dashboard
+            </h2>
+            <Button onClick={startWorkoutClick} className="btn btn-primary btn-lg mb-4" style={{ width: '50%' }}>
+                Start Workout
+            </Button>
             <MuscleGroupModal 
                 show={show} 
                 handleClose={handleClose} 
@@ -88,7 +69,7 @@ function Home() {
             />
             <WorkoutList workouts={workouts} />
 
-            <Pagination>
+            <Pagination className="mt-4">
                 <Pagination.Prev 
                     onClick={() => handlePageChange(currentPage - 1)} 
                     disabled={currentPage === 1} 

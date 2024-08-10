@@ -6,6 +6,7 @@ import Home from "./components/Home";
 import LoginSignup from "./components/LoginSignup";
 import Workout from "./components/Workout";
 import WorkoutDetails from "./components/WorkoutDetails";
+import 'bootstrap/dist/css/bootstrap.min.css';
 function App() 
 {
   return (

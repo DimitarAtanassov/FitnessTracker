@@ -2,7 +2,7 @@ import React from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import axios from "axios";
-
+import 'bootstrap/dist/css/bootstrap.min.css';
 const ExerciseModal = ({
     show,
     handleClose,

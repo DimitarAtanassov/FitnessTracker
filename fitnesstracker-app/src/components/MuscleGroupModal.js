@@ -1,6 +1,6 @@
 import React from "react";
 import { Modal, Button, Form } from "react-bootstrap";
-
+import 'bootstrap/dist/css/bootstrap.min.css';
 const MuscleGroupModal = ({ show, handleClose, muscleGroup, setMuscleGroup, handleStartWorkout }) => {
     return (
         <Modal show={show} onHide={handleClose}>

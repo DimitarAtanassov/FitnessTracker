@@ -1,7 +1,7 @@
 import React from "react";
 import { ListGroup } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-
+import 'bootstrap/dist/css/bootstrap.min.css';
 const WorkoutList = ({ workouts }) => {
     const navigate = useNavigate();
 

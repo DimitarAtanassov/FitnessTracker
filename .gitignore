@@ -362,3 +362,26 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 FitnessTrackerApi/appsettings.json
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+fitnesstracker-app/node_modules
+fitnesstracker-app/.pnp
+fitnesstracker-app/.pnp.js
+
+# testing
+fitnesstracker-app/coverage
+
+# production
+fitnesstracker-app/build
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

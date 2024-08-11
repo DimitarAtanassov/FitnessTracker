@@ -19,7 +19,7 @@ using FitnessTrackerAPI.Extensions;
 namespace FitnessTrackerAPI.Controllers
 {
     [Authorize]
-    public class UserController(DataContext context, IMapper mapper, IUserService userSerivce) : BaseApiController
+    public class UserController(DataContext context, IMapper mapper, IUserService userSerivce, IWorkoutService workoutService) : BaseApiController
     {
 
         // GET: api/User
@@ -95,18 +95,13 @@ namespace FitnessTrackerAPI.Controllers
 
             if (user == null) return BadRequest("Could not find user");
 
-            var workout = new Workout
-            {
-                WorkoutName = workoutDto.WorkoutName,
-                Date = workoutDto.Date,
-                UserId = user.Id
-            };
-
-            user.Workouts.Add(workout);
+            var userWorkout = workoutService.CreateUserWorkout(workoutDto, user.Id);
+            
+            user.Workouts.Add(userWorkout);
 
             if (await userSerivce.SaveAllAsync())
             {
-                var workoutToReturn = mapper.Map<WorkoutDto>(workout);
+                var workoutToReturn = mapper.Map<WorkoutDto>(userWorkout);
                 return CreatedAtAction("GetUser", new { id = user.Id }, workoutToReturn);
             }
 

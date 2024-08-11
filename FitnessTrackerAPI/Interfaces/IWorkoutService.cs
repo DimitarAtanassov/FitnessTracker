@@ -8,5 +8,6 @@ namespace FitnessTrackerAPI.Interfaces
         Task<IEnumerable<Workout>> GetWorkoutsAsync();
         Task<Workout?> GetWorkoutByIdAsync(int id);
         Task<bool> SaveAllAsync();
+        Workout CreateUserWorkout(WorkoutDto workoutDto, int userId);
     }
 }

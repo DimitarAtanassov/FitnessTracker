@@ -24,5 +24,20 @@ namespace FitnessTrackerAPI.Services
         {
             return await context.SaveChangesAsync() > 0;
         }
+
+        public Workout CreateUserWorkout(WorkoutDto workoutDto, int userId)
+        {
+            var userWorkout = new Workout
+            {
+                WorkoutName = workoutDto.WorkoutName,
+                Date = workoutDto.Date,
+                UserId = userId
+            };
+
+            context.Workouts.Add(userWorkout);
+
+            return userWorkout;
+
+        }
     }
 }

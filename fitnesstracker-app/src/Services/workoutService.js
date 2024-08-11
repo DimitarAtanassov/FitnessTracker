@@ -4,19 +4,20 @@ const API_BASE_URL = "http://localhost:5162/api/user/";
 const token = localStorage.getItem("token");
 const apiService = axios.create({
   baseURL: API_BASE_URL,
-  headers: { Authorization: `Bearer ${token}` },
+  headers: { "Authorization": `Bearer ${token}` },
 });
 
 const WorkoutService = {
   fetchUserWorkouts: async (pageIndex) => {
     try {
-      const workouts = await apiService.get("get-workouts", {
+      const response = await apiService.get("get-workouts", {
         params: {
           PageIndex: pageIndex,
           PageSize: 10,
         },
       });
-      return workouts;
+      console.log(response.data);
+      return response.data; // Return only the workouts array
     } catch (error) {
       throw error;
     }

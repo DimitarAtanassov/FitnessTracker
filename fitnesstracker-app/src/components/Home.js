@@ -19,7 +19,7 @@ function Home() {
         const fetchWorkouts = async (pageIndex) => {
             try {
                 const fetchedWorkouts = await WorkoutService.fetchUserWorkouts(pageIndex);
-                setWorkouts(fetchedWorkouts);
+                setWorkouts(fetchedWorkouts); // Set workouts directly
             } catch (err) {
                 console.error("Error fetching workouts:", err);
             }
